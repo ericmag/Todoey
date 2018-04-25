@@ -10,11 +10,18 @@ import UIKit
 
 class TodoListViewController: UITableViewController {
 
+  // Tableau de la todo list
   var itemArray = ["Find Mike", "Buy Eggos", "Destory Demogorgon"]
+  
+  let defaults = UserDefaults.standard
   
   override func viewDidLoad() {
     super.viewDidLoad()
-    // Do any additional setup after loading the view, typically from a nib.
+    
+    // On charge les données depuis le fichier plist
+    if let items = defaults.array(forKey: "TodoListArray") as? [String] {
+      itemArray = items
+    }
   }
 
   // MARK - Tableview Datasource Methods
@@ -43,6 +50,8 @@ class TodoListViewController: UITableViewController {
       // what will happen once the user clicks the Add Item button in our UIAlert
       // On ajoute la saisie au tableau
       self.itemArray.append(textField.text!)
+      // On sauve l'item (persistence)
+      self.defaults.set(self.itemArray, forKey: "TodoListArray")
       // On recharge la table view
       self.tableView.reloadData()
     }
