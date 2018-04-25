@@ -13,27 +13,20 @@ class TodoListViewController: UITableViewController {
   // Tableau de la todo list
   var itemArray = [Item]()
   
-  let defaults = UserDefaults.standard
+  // Chemin vers le fichier
+  let dataFilePath = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first?.appendingPathComponent("Items.plist")
   
   override func viewDidLoad() {
     super.viewDidLoad()
     
-    let newItem = Item()
-    newItem.title = "Find Mike"
-    itemArray.append(newItem)
-    
-    let newItem2 = Item()
-    newItem2.title = "Buy Eggos"
-    itemArray.append(newItem2)
-    
-    let newItem3 = Item()
-    newItem3.title = "Destroy Demogorgon"
-    itemArray.append(newItem3)
-    
+    print(dataFilePath!)
+
     // On charge les données depuis le fichier plist
-    if let items = defaults.array(forKey: "TodoListArray") as? [Item] {
-      itemArray = items
-    }
+    loadItems()
+    
+    //if let items = defaults.array(forKey: "TodoListArray") as? [Item] {
+    //  itemArray = items
+    //}
   }
 
   // MARK - Tableview Datasource Methods
@@ -78,13 +71,11 @@ class TodoListViewController: UITableViewController {
       let newItem = Item()
       newItem.title = textField.text!
       
+      // On ajoute l'item au tableau
       self.itemArray.append(newItem)
       
-      // On sauve l'item (persistence)
-      self.defaults.set(self.itemArray, forKey: "TodoListArray")
-      
-      // On recharge la table view
-      self.tableView.reloadData()
+      // On sauve sur le téléphone
+      self.saveItems()
     }
     
     // Paramétrage du message d'alerte pour lire la saisie
@@ -105,21 +96,43 @@ class TodoListViewController: UITableViewController {
     //print(itemArray[indexPath.row])
     
     // Gère la case à cocher
-    // Onn utilise l'opposé au lieu de tester la valeur pour assigner son contraire
+    // On utilise l'opposé au lieu de tester la valeur pour assigner son contraire
     itemArray[indexPath.row].done = !itemArray[indexPath.row].done
     
-    /*
-    if itemArray[indexPath.row].done == false {
-      itemArray[indexPath.row].done = true
-    } else {
-      itemArray[indexPath.row].done = false
-    } */
-    
-    // On recharge le tableau
-    tableView.reloadData()
+    // On sauve sur le téléphone
+    saveItems()
     
     // Supprime la sélection de la ligne
     tableView.deselectRow(at: indexPath, animated: true)
+  }
+  
+  // MARK - Model Manipulation Methods
+  
+  func saveItems() {
+    // On sauve les items (persistence)
+    let encoder = PropertyListEncoder()
+    
+    do {
+      let data = try encoder.encode(itemArray)
+      try data.write(to: dataFilePath!)
+    } catch {
+      print("Error encoding item array \(error)")
+    }
+    
+    // On recharge la table view
+    self.tableView.reloadData()
+  }
+  
+  func loadItems() {
+    if let data = try? Data(contentsOf: dataFilePath!) {
+      let decoder = PropertyListDecoder()
+      
+      do {
+        itemArray = try decoder.decode([Item].self, from: data)
+      } catch {
+        print("Error during load of data, \(error)")
+      }
+    }
   }
 }
 
