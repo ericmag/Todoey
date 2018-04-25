@@ -11,15 +11,27 @@ import UIKit
 class TodoListViewController: UITableViewController {
 
   // Tableau de la todo list
-  var itemArray = ["Find Mike", "Buy Eggos", "Destory Demogorgon"]
+  var itemArray = [Item]()
   
   let defaults = UserDefaults.standard
   
   override func viewDidLoad() {
     super.viewDidLoad()
     
+    let newItem = Item()
+    newItem.title = "Find Mike"
+    itemArray.append(newItem)
+    
+    let newItem2 = Item()
+    newItem2.title = "Buy Eggos"
+    itemArray.append(newItem2)
+    
+    let newItem3 = Item()
+    newItem3.title = "Destroy Demogorgon"
+    itemArray.append(newItem3)
+    
     // On charge les données depuis le fichier plist
-    if let items = defaults.array(forKey: "TodoListArray") as? [String] {
+    if let items = defaults.array(forKey: "TodoListArray") as? [Item] {
       itemArray = items
     }
   }
@@ -35,7 +47,21 @@ class TodoListViewController: UITableViewController {
     
     let cell = tableView.dequeueReusableCell(withIdentifier: "ToDoItemCell", for: indexPath)
     
-    cell.textLabel?.text = itemArray[indexPath.row]
+    let item = itemArray[indexPath.row]
+    
+    cell.textLabel?.text = item.title
+    
+    // On récupère l'état de la case à cocher du tableau
+    // Ternary operator
+    // value = condition ? valueIfTrue : valueIfFalse
+    cell.accessoryType = item.done ? .checkmark : .none
+    
+    
+    /*if item.done == true {
+      cell.accessoryType = .checkmark
+    } else {
+      cell.accessoryType = .none
+    } */
     
     return cell
   }
@@ -49,9 +75,14 @@ class TodoListViewController: UITableViewController {
     let action = UIAlertAction(title: "Add Item", style: .default) { (action) in
       // what will happen once the user clicks the Add Item button in our UIAlert
       // On ajoute la saisie au tableau
-      self.itemArray.append(textField.text!)
+      let newItem = Item()
+      newItem.title = textField.text!
+      
+      self.itemArray.append(newItem)
+      
       // On sauve l'item (persistence)
       self.defaults.set(self.itemArray, forKey: "TodoListArray")
+      
       // On recharge la table view
       self.tableView.reloadData()
     }
@@ -74,13 +105,20 @@ class TodoListViewController: UITableViewController {
     //print(itemArray[indexPath.row])
     
     // Gère la case à cocher
-    if tableView.cellForRow(at: indexPath)?.accessoryType == .checkmark {
-      tableView.cellForRow(at: indexPath)?.accessoryType = .none
-    } else {
-      tableView.cellForRow(at: indexPath)?.accessoryType = .checkmark
-    }
+    // Onn utilise l'opposé au lieu de tester la valeur pour assigner son contraire
+    itemArray[indexPath.row].done = !itemArray[indexPath.row].done
     
-    // Supprime la ligne sélectionnée
+    /*
+    if itemArray[indexPath.row].done == false {
+      itemArray[indexPath.row].done = true
+    } else {
+      itemArray[indexPath.row].done = false
+    } */
+    
+    // On recharge le tableau
+    tableView.reloadData()
+    
+    // Supprime la sélection de la ligne
     tableView.deselectRow(at: indexPath, animated: true)
   }
 }
